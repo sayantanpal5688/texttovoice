@@ -4,6 +4,11 @@ import os, io, re, json, hashlib, secrets
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
+app.config.update(
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=True,      # Render serves over HTTPS
+    SESSION_COOKIE_HTTPONLY=True,
+)
 CORS(app, supports_credentials=True)
 
 # =============================================================
