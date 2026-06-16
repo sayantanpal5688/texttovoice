@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/stats
+Disallow: /synthesize
+Disallow: /preview
+Disallow: /translate
+
+Sitemap: https://texttovoice-s5f0.onrender.com/sitemap.xml
