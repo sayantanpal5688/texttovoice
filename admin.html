@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>textTOvoice — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:    #0a0208; --bg2: #111111; --bg3: #1a1a1a;
+    --pink:  #970747; --pink2: #c0095c; --pink3: #ff2d78;
+    --white: #ffffff; --muted: #666666; --border: #2a2a2a;
+    --green: #2ec4b6; --yellow: #ffc857; --red: #ff4d6d;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--white); font-family:'Space Grotesk',sans-serif; min-height:100vh; }
+
+  .top-bar { width:100%; height:3px; background:linear-gradient(90deg,#970747,#ff2d78,#970747); background-size:200% 100%; animation:shimmer 2.5s linear infinite; }
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+  header {
+    background:var(--bg2); border-bottom:1px solid var(--border);
+    padding:0 2rem; display:flex; align-items:center; gap:1rem; height:64px;
+  }
+  .logo { font-family:'Space Mono',monospace; font-size:18px; font-weight:700; color:var(--white); }
+  .logo span { color:var(--pink3); }
+  .admin-badge {
+    background:rgba(151,7,71,0.2); border:1px solid var(--pink);
+    color:var(--pink3); font-family:'Space Mono',monospace;
+    font-size:10px; letter-spacing:2px; padding:4px 12px; border-radius:20px;
+  }
+  .logout-btn {
+    margin-left:auto; background:transparent; border:1px solid var(--border);
+    color:var(--muted); font-family:'Space Mono',monospace;
+    font-size:10px; padding:5px 14px; border-radius:20px;
+    cursor:pointer; transition:all 0.15s; text-decoration:none;
+  }
+  .logout-btn:hover { border-color:var(--pink3); color:var(--pink3); }
+
+  main { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 4rem; display:flex; flex-direction:column; gap:1.4rem; }
+
+  /* Stat cards */
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
+  .stat-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:14px; padding:18px 16px; display:flex; flex-direction:column; gap:6px;
+    transition:border-color 0.2s;
+  }
+  .stat-card:hover { border-color:rgba(151,7,71,0.4); }
+  .stat-val { font-size:32px; font-weight:700; color:var(--white); line-height:1; }
+  .stat-label { font-family:'Space Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; }
+  .stat-card.accent-green .stat-val { color:var(--green); }
+  .stat-card.accent-yellow .stat-val { color:var(--yellow); }
+  .stat-card.accent-red .stat-val { color:var(--red); }
+  .stat-card.accent-pink .stat-val { color:var(--pink3); }
+
+  /* Panel */
+  .panel { background:var(--bg2); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+  .panel-header {
+    background:var(--bg3); border-bottom:1px solid var(--border);
+    padding:12px 20px; display:flex; align-items:center; justify-content:space-between;
+    font-family:'Space Mono',monospace; font-size:10px; font-weight:700;
+    letter-spacing:2px; color:var(--pink3); text-transform:uppercase;
+  }
+  .panel-body { padding:0; }
+
+  /* Search + filter row */
+  .toolbar {
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    padding:14px 16px; border-bottom:1px solid var(--border);
+  }
+  .search-input {
+    flex:1; min-width:200px; padding:8px 14px;
+    background:rgba(255,255,255,0.04); border:1px solid var(--border);
+    border-radius:10px; color:var(--white); font-family:'Space Grotesk',sans-serif;
+    font-size:13px; outline:none; transition:border-color 0.15s;
+  }
+  .search-input:focus { border-color:var(--pink); }
+  .search-input::placeholder { color:var(--muted); }
+  .filter-btn {
+    background:transparent; border:1px solid var(--border);
+    color:var(--muted); font-family:'Space Grotesk',sans-serif;
+    font-size:12px; padding:7px 16px; border-radius:10px;
+    cursor:pointer; transition:all 0.15s; white-space:nowrap;
+  }
+  .filter-btn.active { background:var(--pink); border-color:var(--pink); color:#fff; }
+  .filter-btn:hover:not(.active) { border-color:var(--pink3); color:var(--pink3); }
+
+  /* Table */
+  .user-table { width:100%; border-collapse:collapse; }
+  .user-table th {
+    text-align:left; padding:10px 16px;
+    font-family:'Space Mono',monospace; font-size:10px;
+    color:var(--muted); letter-spacing:1.5px; text-transform:uppercase;
+    border-bottom:1px solid var(--border); background:var(--bg3);
+  }
+  .user-table td {
+    padding:12px 16px; border-bottom:1px solid var(--border);
+    font-size:13px; color:var(--white); vertical-align:middle;
+  }
+  .user-table tr:last-child td { border-bottom:none; }
+  .user-table tr:hover td { background:rgba(151,7,71,0.04); }
+
+  .badge {
+    display:inline-block; font-size:10px; padding:3px 10px;
+    border-radius:20px; font-family:'Space Mono',monospace; font-weight:700; letter-spacing:0.5px;
+  }
+  .badge-unlimited { background:rgba(46,196,182,0.15); color:var(--green); border:1px solid rgba(46,196,182,0.3); }
+  .badge-free      { background:rgba(255,200,87,0.1);  color:var(--yellow); border:1px solid rgba(255,200,87,0.3); }
+  .badge-limit     { background:rgba(255,77,109,0.15); color:var(--red);    border:1px solid rgba(255,77,109,0.3); }
+
+  .gen-bar-wrap { display:flex; align-items:center; gap:8px; }
+  .gen-bar-bg { width:80px; height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+  .gen-bar-fill { height:100%; border-radius:3px; background:var(--pink); transition:width 0.3s; }
+  .gen-bar-fill.warn { background:var(--yellow); }
+  .gen-bar-fill.full { background:var(--red); }
+  .gen-num { font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); white-space:nowrap; }
+
+  .action-btn {
+    background:transparent; border:1px solid var(--border);
+    color:var(--muted); font-family:'Space Grotesk',sans-serif;
+    font-size:11px; font-weight:600; padding:4px 10px; border-radius:8px;
+    cursor:pointer; transition:all 0.15s; white-space:nowrap;
+  }
+  .action-btn:hover { border-color:var(--pink3); color:var(--pink3); }
+  .action-btn.upgrade  { border-color:rgba(46,196,182,0.4); color:var(--green); }
+  .action-btn.upgrade:hover { background:var(--green); color:#000; border-color:var(--green); }
+  .action-btn.reset    { border-color:rgba(255,200,87,0.4); color:var(--yellow); }
+  .action-btn.reset:hover { background:var(--yellow); color:#000; border-color:var(--yellow); }
+  .action-btn.delete   { border-color:rgba(255,77,109,0.4); color:var(--red); }
+  .action-btn.delete:hover { background:var(--red); color:#fff; border-color:var(--red); }
+  .action-btn.downgrade { border-color:rgba(255,200,87,0.4); color:var(--yellow); }
+
+  .actions-cell { display:flex; gap:6px; flex-wrap:wrap; }
+
+  /* Toast notification */
+  .toast {
+    position:fixed; bottom:24px; right:24px;
+    background:var(--bg2); border:1px solid var(--green);
+    color:var(--green); font-family:'Space Mono',monospace;
+    font-size:12px; padding:12px 20px; border-radius:12px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.4);
+    opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:999;
+  }
+  .toast.show { opacity:1; }
+  .toast.error { border-color:var(--red); color:var(--red); }
+
+  /* Loading */
+  .loading { text-align:center; padding:40px; font-family:'Space Mono',monospace; font-size:12px; color:var(--muted); letter-spacing:1px; }
+
+  .refresh-btn {
+    background:transparent; border:1px solid var(--border);
+    color:var(--muted); font-family:'Space Mono',monospace;
+    font-size:10px; padding:4px 12px; border-radius:20px;
+    cursor:pointer; transition:all 0.15s;
+  }
+  .refresh-btn:hover { border-color:var(--pink3); color:var(--pink3); }
+
+  .username-cell { font-family:'Space Mono',monospace; font-size:13px; font-weight:700; }
+  .admin-tag { font-size:9px; color:var(--pink3); margin-left:6px; }
+</style>
+</head>
+<body>
+
+<div class="top-bar"></div>
+<header>
+  <div class="logo">text<span>TO</span>voice</div>
+  <div class="admin-badge">ADMIN PANEL</div>
+  <a class="logout-btn" href="/" onclick="doLogout()">↩ Back to App</a>
+</header>
+
+<main>
+
+  <!-- Stats -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="loading">Loading stats…</div>
+  </div>
+
+  <!-- Users table -->
+  <div class="panel">
+    <div class="panel-header">
+      <span>All Users</span>
+      <button class="refresh-btn" onclick="loadStats()">↺ Refresh</button>
+    </div>
+    <div class="panel-body">
+      <div class="toolbar">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search username…" oninput="filterTable()">
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('unlimited',this)">Unlimited</button>
+        <button class="filter-btn" onclick="setFilter('free',this)">Free</button>
+        <button class="filter-btn" onclick="setFilter('limit',this)">Hit Limit</button>
+      </div>
+      <div id="tableWrap">
+        <div class="loading">Loading users…</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const BACKEND = "http://127.0.0.1:5000";
+let allUsers = [];
+let currentFilter = 'all';
+
+async function loadStats(){
+  try{
+    const res  = await fetch(BACKEND+"/admin/stats", {credentials:"include"});
+    if(!res.ok){ window.location.href="/"; return; }
+    const data = await res.json();
+
+    // Render stat cards
+    document.getElementById("statsGrid").innerHTML = `
+      <div class="stat-card">
+        <div class="stat-val">${data.total_users}</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card accent-green">
+        <div class="stat-val">${data.total_gens}</div>
+        <div class="stat-label">Total Generations</div>
+      </div>
+      <div class="stat-card accent-pink">
+        <div class="stat-val">${data.unlimited}</div>
+        <div class="stat-label">Unlimited Accounts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${data.free_users}</div>
+        <div class="stat-label">Free Users</div>
+      </div>
+      <div class="stat-card accent-yellow">
+        <div class="stat-val">${data.near_limit}</div>
+        <div class="stat-label">Near Limit (8+)</div>
+      </div>
+      <div class="stat-card accent-red">
+        <div class="stat-val">${data.hit_limit}</div>
+        <div class="stat-label">Hit Limit (10/10)</div>
+      </div>
+    `;
+
+    allUsers = data.users;
+    renderTable(allUsers);
+
+  }catch(e){
+    showToast("Failed to load stats: "+e.message, true);
+  }
+}
+
+function renderTable(users){
+  const wrap = document.getElementById("tableWrap");
+  if(!users.length){
+    wrap.innerHTML = '<div class="loading">No users found.</div>';
+    return;
+  }
+
+  const rows = users.map(u => {
+    const pct    = u.unlimited ? 0 : Math.min(100, (u.generations/10)*100);
+    const barCls = u.unlimited ? '' : pct>=100 ? 'full' : pct>=80 ? 'warn' : '';
+    const statusBadge = u.unlimited
+      ? '<span class="badge badge-unlimited">UNLIMITED</span>'
+      : u.generations >= 10
+        ? '<span class="badge badge-limit">LIMIT HIT</span>'
+        : '<span class="badge badge-free">FREE</span>';
+
+    const genDisplay = u.unlimited
+      ? '<span style="color:var(--green);font-family:\'Space Mono\',monospace">∞</span>'
+      : `<div class="gen-bar-wrap">
+          <div class="gen-bar-bg"><div class="gen-bar-fill ${barCls}" style="width:${pct}%"></div></div>
+          <span class="gen-num">${u.generations}/10</span>
+        </div>`;
+
+    const isAdmin = u.username === 'pal';
+    const actions = isAdmin ? '<span style="color:var(--muted);font-size:11px;font-family:\'Space Mono\',monospace;">ADMIN</span>' : `
+      <div class="actions-cell">
+        ${!u.unlimited ? `<button class="action-btn upgrade" onclick="upgradeUser('${u.username}')">⬆ Upgrade</button>` : `<button class="action-btn downgrade" onclick="downgradeUser('${u.username}')">⬇ Downgrade</button>`}
+        <button class="action-btn reset" onclick="resetGens('${u.username}')">↺ Reset</button>
+        <button class="action-btn delete" onclick="deleteUser('${u.username}')">🗑 Delete</button>
+      </div>`;
+
+    return `<tr data-username="${u.username}" data-filter="${u.unlimited?'unlimited':u.generations>=10?'limit':'free'}">
+      <td><span class="username-cell">${u.username}${isAdmin?'<span class="admin-tag">★ admin</span>':''}</span></td>
+      <td>${statusBadge}</td>
+      <td>${genDisplay}</td>
+      <td style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">${u.joined}</td>
+      <td style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">${u.last_active}</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Status</th>
+          <th>Generations</th>
+          <th>Joined</th>
+          <th>Last Active</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function filterTable(){
+  const q = document.getElementById("searchInput").value.toLowerCase();
+  document.querySelectorAll(".user-table tbody tr").forEach(row => {
+    const uname  = row.dataset.username.toLowerCase();
+    const filter = row.dataset.filter;
+    const matchQ = uname.includes(q);
+    const matchF = currentFilter==='all' || filter===currentFilter;
+    row.style.display = (matchQ && matchF) ? '' : 'none';
+  });
+}
+
+function setFilter(f, btn){
+  currentFilter = f;
+  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  filterTable();
+}
+
+async function upgradeUser(username){
+  const res = await fetch(BACKEND+"/admin/upgrade",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({username})});
+  const d   = await res.json();
+  if(d.success){ showToast("✓ "+username+" upgraded to unlimited"); loadStats(); }
+  else showToast(d.error, true);
+}
+
+async function downgradeUser(username){
+  if(!confirm("Downgrade "+username+" to free?")) return;
+  const res = await fetch(BACKEND+"/admin/downgrade",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({username})});
+  const d   = await res.json();
+  if(d.success){ showToast("✓ "+username+" downgraded"); loadStats(); }
+  else showToast(d.error, true);
+}
+
+async function resetGens(username){
+  if(!confirm("Reset generation count for "+username+"?")) return;
+  const res = await fetch(BACKEND+"/admin/reset_gens",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({username})});
+  const d   = await res.json();
+  if(d.success){ showToast("✓ "+username+" reset to 0 generations"); loadStats(); }
+  else showToast(d.error, true);
+}
+
+async function deleteUser(username){
+  if(!confirm("Permanently delete user '"+username+"'? This cannot be undone.")) return;
+  const res = await fetch(BACKEND+"/admin/delete_user",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({username})});
+  const d   = await res.json();
+  if(d.success){ showToast("✓ "+username+" deleted"); loadStats(); }
+  else showToast(d.error, true);
+}
+
+async function doLogout(){
+  await fetch(BACKEND+"/logout",{method:"POST",credentials:"include"});
+}
+
+function showToast(msg, isError=false){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className   = "toast show" + (isError?" error":"");
+  setTimeout(()=>t.className="toast", 3000);
+}
+
+loadStats();
+</script>
+</body>
+</html>
